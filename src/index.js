@@ -7,6 +7,8 @@ import * as serviceWorker from './serviceWorker';
 import { Provider } from 'react-redux'
 import store from './store'
 
+import './statics/iconfont/iconfont';
+
 ReactDOM.render(
   <Provider store={store}>
     <App />

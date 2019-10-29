@@ -25,7 +25,7 @@ export const mouseLeave = () => ({
 })
 
 export const changePage = (page) => ({
-  type: actionTypes.SEARCH_FOCUS,
+  type: actionTypes.CHANGE_PAGE,
   page
 })
 

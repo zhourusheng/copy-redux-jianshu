@@ -3,6 +3,9 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
 
+import { action } from './store'
+import { action as loginAction } from '../../pages/login/store'
+
 import {
 	HeaderWrapper,
 	Logo,
@@ -23,9 +26,41 @@ import {
 class Header extends React.Component {
 
 	getListArea() {
-		return (
-			<div></div>
-		)
+		const { focused, list, page, totalPage, mouseIn, handleMouseEnter, handleMouseLeave, handleChangePage } = this.props;
+		const newList = list.toJS();
+		const pageList = [];
+
+		if (newList.length) {
+			for (let i = (page - 1) * 10; i < page * 10; i++) {
+				pageList.push(
+					<SearchInfoItem key={newList[i]}>{newList[i]}</SearchInfoItem>
+				)
+			}
+		}
+
+		if (focused || mouseIn) {
+			return (
+				<SearchInfo 
+					onMouseEnter={handleMouseEnter}
+					onMouseLeave={handleMouseLeave}
+				>
+					<SearchInfoTitle>
+						热门搜索
+						<SearchInfoSwitch 
+							onClick={() => handleChangePage(page, totalPage, this.spinIcon)}
+						>
+							<i ref={(icon) => {this.spinIcon = icon}} className="iconfont spin">&#xe851;</i>
+							换一批
+						</SearchInfoSwitch>
+					</SearchInfoTitle>
+					<SearchInfoList>
+						{pageList}
+					</SearchInfoList>
+				</SearchInfo>
+			)
+		} else {
+			return null;
+		}
 	}
 
   render() {
@@ -78,4 +113,55 @@ class Header extends React.Component {
   }
 }
 
-export default Header
+// 一共要两个函数
+// mapStateToProps 将store中的state映射到具体的组件中
+// mapDispatchToProps 将store 中所有dispatch 的 action映射 到具体组件中作为 props 的方法
+
+const mapStateToProps = state => {
+	return {
+		focused: state.getIn(['header', 'focused']),
+		list: state.getIn(['header', 'list']),
+		page: state.getIn(['header', 'page']),
+		totalPage: state.getIn(['header', 'totalPage']),
+		mouseIn: state.getIn(['header', 'mouseIn']),
+		login: state.getIn(['login', 'login'])
+	}
+}
+
+const mapDispatchToProps = dispatch => {
+	return {
+		handleInputFocus(list) {
+			(list.size === 0) && dispatch(action.getList())
+			dispatch(action.searchFocus())
+		},
+		handleInputBlur() {
+			dispatch(action.searchBlur())
+		},
+		handleMouseEnter() {
+			dispatch(action.mouseEnter())
+		},
+		handleMouseLeave() {
+			dispatch(action.mouseLeave())
+		},
+		handleChangePage(page, totalPage, spin) {
+			let originAngle = spin.style.transform.replace(/[^0-9]/ig, '')
+			if (originAngle) {
+				originAngle = parseInt(originAngle, 10)
+			} else {
+				originAngle = 0
+			}
+			spin.style.transform = `rotate(${originAngle + 360}deg)`
+
+			if (page < totalPage) {
+				dispatch(action.changePage(page + 1));
+			}else {
+				dispatch(action.changePage(1));
+			}
+		},
+		logout() {
+			dispatch(loginAction.logout())
+		}
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Header)
